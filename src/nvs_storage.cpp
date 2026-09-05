@@ -4,12 +4,12 @@ Preferences NVSStorage::prefs;
 
 void NVSStorage::init() {
     prefs.begin(NVS_NAMESPACE, false); // false = read/write mode
-    // Initialize default values if not present (robust method avoiding isKey)
-    prefs.putUShort("cal_dry", prefs.getUShort("cal_dry", 4095));
-    prefs.putUShort("cal_wet", prefs.getUShort("cal_wet", 1500));
-    prefs.putUChar("pump_max", prefs.getUChar("pump_max", MAX_PUMP_DURATION_SEC));
-    prefs.putUChar("moist_thr", prefs.getUChar("moist_thr", 30));
-    prefs.putString("admin_pass", prefs.getString("admin_pass", "admin"));
+    // Initialize default values only if not already present (avoids unnecessary flash wear)
+    if (!prefs.isKey("cal_dry"))   prefs.putUShort("cal_dry", 4095);
+    if (!prefs.isKey("cal_wet"))   prefs.putUShort("cal_wet", 1500);
+    if (!prefs.isKey("pump_max"))  prefs.putUChar("pump_max", MAX_PUMP_DURATION_SEC);
+    if (!prefs.isKey("moist_thr")) prefs.putUChar("moist_thr", 30);
+    if (!prefs.isKey("admin_pass")) prefs.putString("admin_pass", "admin");
 }
 
 uint16_t NVSStorage::getCalDry() { return prefs.getUShort("cal_dry", 4095); }

@@ -36,9 +36,14 @@ bool PumpController::startPump(uint8_t duration_sec, bool override_safety) {
     if (duration_sec > max_duration) duration_sec = max_duration;
     
     if (!override_safety) {
-        // Cooldown check (placeholder logic using millis, ideally use unix time)
-        // Water presence check handled via SensorManager externally or here.
-        // For simplicity, we just trust the caller's override flag or do basic checks
+        // Cooldown check: prevent rapid successive pump triggers
+        if (last_pump_time_unix > 0) {
+            uint32_t elapsed_sec = (millis() / 1000) - last_pump_time_unix;
+            if (elapsed_sec < PUMP_COOLDOWN_SEC) {
+                Serial.println("Pump blocked: cooldown active.");
+                return false;
+            }
+        }
     }
 
     pump_duration_ms = duration_sec * 1000;

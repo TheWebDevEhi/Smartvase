@@ -5,6 +5,7 @@
 #include "pump_controller.h"
 #include "power_manager.h"
 #include "led_indicator.h"
+#include "display_manager.h"
 #include "webassets.h"
 
 #include <WiFi.h>
@@ -80,7 +81,7 @@ void WebServerManager::setupEndpoints() {
     // Serve HTML
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
         handleClientActive();
-        request->send_P(200, "text/html", index_html);
+        request->send(200, "text/html", index_html);
     });
 
     // API Sensors
@@ -103,6 +104,13 @@ void WebServerManager::setupEndpoints() {
         request->send(200, "application/json", response);
     });
 
+    // Wake the OLED from its dimmed/idle state (dashboard "wake screen" button)
+    server.on("/api/display/wake", HTTP_POST, [](AsyncWebServerRequest *request){
+        handleClientActive();
+        DisplayManager::turnOn();
+        request->send(200, "text/plain", "Display woken");
+    });
+
     // Handle POST data (basic implementation for ArduinoJson 7)
     server.on("/api/pump", HTTP_POST, [](AsyncWebServerRequest *request){}, NULL,
         [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total) {
@@ -117,8 +125,11 @@ void WebServerManager::setupEndpoints() {
             String action = doc["action"] | "";
             if (action == "start") {
                 uint8_t dur = doc["duration"] | 5;
-                PumpController::startPump(dur, true); // Overriding safety for manual web trigger for now
-                request->send(200, "text/plain", "Pump started");
+                if (PumpController::startPump(dur, false)) { // cooldown enforced for manual triggers too
+                    request->send(200, "text/plain", "Pump started");
+                } else {
+                    request->send(429, "text/plain", "Pump blocked (already running or cooling down)");
+                }
             } else if (action == "stop") {
                 PumpController::stopPump();
                 request->send(200, "text/plain", "Pump stopped");

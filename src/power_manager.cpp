@@ -16,7 +16,7 @@ void PowerManager::init() {
 
     // Configure battery monitor pin
     pinMode(PIN_BATTERY, INPUT);
-    analogSetAttenuation(ADC_11db); // Full range 0-3.3V
+    analogSetPinAttenuation(PIN_BATTERY, ADC_11db); // Full range 0-3.3V for battery pin only
 }
 
 WakeCause PowerManager::getWakeCause() {

@@ -12,6 +12,7 @@ public:
     
 private:
     static bool is_on;
+    static bool is_dimmed;
     static uint32_t last_activity_ms;
 };
 

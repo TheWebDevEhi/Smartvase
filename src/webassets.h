@@ -143,6 +143,7 @@ const char index_html[] PROGMEM = R"rawliteral(
             </button>
             <button class="btn btn-stop" id="btn-stop" onclick="stopPump()">Stop Pump</button>
             
+            <button class="btn btn-settings" onclick="wakeDisplay()">Wake Screen</button>
             <button class="btn btn-settings" onclick="openSettings()">Network Settings</button>
         </div>
     </div>
@@ -283,7 +284,11 @@ const char index_html[] PROGMEM = R"rawliteral(
             document.getElementById('warning-modal').classList.add('active');
         }
         
-        function openSettings() { 
+        function wakeDisplay() {
+            fetch('/api/display/wake', { method: 'POST' });
+        }
+
+        function openSettings() {
             document.getElementById('settings-modal').classList.add('active'); 
         }
         

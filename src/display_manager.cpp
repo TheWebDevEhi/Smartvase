@@ -11,6 +11,7 @@
 static Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
 bool DisplayManager::is_on = false;
+bool DisplayManager::is_dimmed = false;
 uint32_t DisplayManager::last_activity_ms = 0;
 
 void DisplayManager::init() {
@@ -25,20 +26,23 @@ void DisplayManager::init() {
     display.setCursor(0,0);
     display.println("Smart Vase Init");
     display.display();
-    
+    Serial.println("SSD1306 initialized OK");
+
     is_on = true;
+    is_dimmed = false;
     last_activity_ms = millis();
 }
 
 void DisplayManager::update() {
     if (!is_on) return;
-    
-    // Auto dim/off logic
-    if (millis() - last_activity_ms > 10000) {
-        // Dim display (if supported, else just wait for full off)
+
+    // Auto dim logic - edge-triggered so we only send the I2C command once,
+    // not on every loop() iteration for as long as the display stays idle.
+    if (!is_dimmed && millis() - last_activity_ms > 10000) {
         display.dim(true);
+        is_dimmed = true;
     }
-    
+
     // Throttle display updates to avoid jamming the I2C bus
     static uint32_t last_draw_ms = 0;
     if (millis() - last_draw_ms < 500) return;
@@ -70,8 +74,11 @@ void DisplayManager::turnOn() {
         display.ssd1306_command(SSD1306_DISPLAYON);
         is_on = true;
     }
+    if (is_dimmed) {
+        display.dim(false);
+        is_dimmed = false;
+    }
     last_activity_ms = millis();
-    display.dim(false);
 }
 
 void DisplayManager::turnOff() {
@@ -79,4 +86,5 @@ void DisplayManager::turnOff() {
         display.ssd1306_command(SSD1306_DISPLAYOFF);
         is_on = false;
     }
+    is_dimmed = false;
 }

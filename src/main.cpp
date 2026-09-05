@@ -11,6 +11,7 @@
 void setup() {
     Serial.begin(115200);
     delay(100);
+    PumpController::init();  // FIRST — deactivate relay ASAP to prevent startup pump glitch
     Serial.println("Smart Vase Starting...");
 
     // Initialize all subsystems
@@ -18,7 +19,6 @@ void setup() {
     PowerManager::init();
     LedIndicator::init();
     DisplayManager::init();  // Init display (and I2C) early, before sensor reads
-    PumpController::init();
     SensorManager::init();
     
     // Check wake cause
@@ -29,7 +29,7 @@ void setup() {
     SensorManager::readAll(currentData);
 
     // Auto-Pump logic
-    if (cause == WakeCause::TIMER_WAKE || cause == WakeCause::POWER_ON) {
+    if (cause == WakeCause::TIMER_WAKE) {
         uint8_t thr = NVSStorage::getMoistureThreshold();
         if (currentData.soilMoisturePct < thr && currentData.waterPresent) {
             if (PowerManager::getBatteryPercent() > BATTERY_MIN_PCT) {
@@ -44,6 +44,7 @@ void setup() {
     
     if (cause == WakeCause::PIR_MOTION) {
         Serial.println("Woke up from PIR.");
+        DisplayManager::turnOn(); // Someone's near the vase - wake the screen
     } else if (cause == WakeCause::TIMER_WAKE) {
         Serial.println("Woke up from Timer.");
         // Optional: Turn off the display on timer wake to save power:
