@@ -97,11 +97,32 @@ void WebServerManager::setupEndpoints() {
         doc["hum"] = data.humidity;
         doc["light"] = data.lightLevel;
         doc["water"] = data.waterPresent ? 1 : 0;
+        doc["waterLevel"] = data.waterLevelPct;
         doc["bat"] = PowerManager::getBatteryPercent();
         
         String response;
         serializeJson(doc, response);
         request->send(200, "application/json", response);
+    });
+
+    // Calibrate the water-level sensor: send the raw ADC values you observed
+    // in the serial log for an empty reservoir and a fully submerged probe.
+    server.on("/api/calibrate/water", HTTP_POST, [](AsyncWebServerRequest *request){}, NULL,
+        [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total) {
+            handleClientActive();
+            JsonDocument doc;
+            DeserializationError error = deserializeJson(doc, data, len);
+            if (error) {
+                request->send(400, "text/plain", "Invalid JSON");
+                return;
+            }
+
+            uint16_t empty_val = doc["empty"] | NVSStorage::getWaterEmptyCal();
+            uint16_t full_val = doc["full"] | NVSStorage::getWaterFullCal();
+            NVSStorage::setWaterEmptyCal(empty_val);
+            NVSStorage::setWaterFullCal(full_val);
+
+            request->send(200, "text/plain", "Water calibration saved");
     });
 
     // Wake the OLED from its dimmed/idle state (dashboard "wake screen" button)

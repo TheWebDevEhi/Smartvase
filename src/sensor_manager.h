@@ -9,6 +9,7 @@ struct SensorData {
     float humidity;
     uint16_t lightLevel;
     bool waterPresent;
+    uint8_t waterLevelPct;
     uint32_t timestamp;
 };
 
@@ -21,7 +22,7 @@ private:
     static uint8_t readSoilMoisture();
     static void readDHT(float& temp, float& hum);
     static uint16_t readLight();
-    static bool readWaterLevel();
+    static void readWaterLevel(uint8_t& levelPct, bool& present);
 };
 
 #endif // SENSOR_MANAGER_H

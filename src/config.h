@@ -41,6 +41,11 @@
 #define MAX_PUMP_DURATION_SEC 10
 #define PUMP_COOLDOWN_SEC 30
 
+// Water reservoir: below this graduated level (%), treat as "empty" for
+// pump-safety gating (see NVSStorage::getWaterEmptyCal/getWaterFullCal for
+// the raw ADC calibration points this percentage is derived from).
+#define WATER_EMPTY_PCT_THRESHOLD 10
+
 // Battery
 #define BATTERY_MIN_PCT 20   // Below this, no auto-pump
 #define BATTERY_CUTOFF_PCT 0 // Below this, force deep sleep

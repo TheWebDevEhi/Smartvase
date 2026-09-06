@@ -22,7 +22,7 @@ void SensorManager::readAll(SensorData& data) {
     data.soilMoisturePct = readSoilMoisture();
     readDHT(data.temperature, data.humidity);
     data.lightLevel = readLight();
-    data.waterPresent = readWaterLevel();
+    readWaterLevel(data.waterLevelPct, data.waterPresent);
     data.timestamp = millis() / 1000; // placeholder timestamp
 }
 
@@ -65,24 +65,33 @@ uint16_t SensorManager::readLight() {
     return 4095 - analogRead(PIN_LDR);
 }
 
-bool SensorManager::readWaterLevel() {
+void SensorManager::readWaterLevel(uint8_t& levelPct, bool& present) {
     // Power on sensor
     digitalWrite(PIN_WATER_PWR, HIGH);
     delay(10); // Wait for stabilization
-    
+
     uint32_t adc_sum = 0;
     for(int i=0; i<3; i++) {
         adc_sum += analogRead(PIN_WATER_LEVEL);
         delay(1);
     }
     uint16_t raw = adc_sum / 3;
-    
+
     // Power off sensor to prevent corrosion
     digitalWrite(PIN_WATER_PWR, LOW);
-    
-    // Threshold check (tune as needed)
-    if (raw > 500) {
-        return true;
-    }
-    return false;
+
+    uint16_t empty_cal = NVSStorage::getWaterEmptyCal();
+    uint16_t full_cal = NVSStorage::getWaterFullCal();
+
+    long pct = (empty_cal == full_cal) ? 0 : map(raw, empty_cal, full_cal, 0, 100);
+    if (pct < 0) pct = 0;
+    if (pct > 100) pct = 100;
+    levelPct = (uint8_t)pct;
+    present = levelPct > WATER_EMPTY_PCT_THRESHOLD;
+
+    Serial.print("Water level raw ADC: ");
+    Serial.print(raw);
+    Serial.print(" -> ");
+    Serial.print(levelPct);
+    Serial.println("%");
 }

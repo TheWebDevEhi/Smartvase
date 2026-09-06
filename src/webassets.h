@@ -124,7 +124,7 @@ const char index_html[] PROGMEM = R"rawliteral(
             
             <div class="card">
                 <div class="card-title">Reservoir</div>
-                <div><span class="card-value" id="water">--</span></div>
+                <div><span class="card-value" id="water">--</span><span class="card-unit">%</span></div>
             </div>
         </div>
         
@@ -196,12 +196,11 @@ const char index_html[] PROGMEM = R"rawliteral(
             document.getElementById('light').innerText = data.light;
             
             const wEl = document.getElementById('water');
-            if(data.water) { 
-                wEl.innerText = "OK"; 
-                wEl.classList.remove('alert'); 
-            } else { 
-                wEl.innerText = "EMPTY"; 
-                wEl.classList.add('alert'); 
+            wEl.innerText = data.waterLevel;
+            if(data.water) {
+                wEl.classList.remove('alert');
+            } else {
+                wEl.classList.add('alert');
             }
             
             document.getElementById('bat-val').innerText = data.bat + "%";

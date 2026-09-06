@@ -21,7 +21,13 @@ public:
     
     static uint16_t getCalWet();
     static void setCalWet(uint16_t val);
-    
+
+    static uint16_t getWaterEmptyCal();
+    static void setWaterEmptyCal(uint16_t val);
+
+    static uint16_t getWaterFullCal();
+    static void setWaterFullCal(uint16_t val);
+
     static uint8_t getPumpMaxDuration();
     static void setPumpMaxDuration(uint8_t val);
     
